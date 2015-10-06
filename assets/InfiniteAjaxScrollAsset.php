@@ -28,15 +28,9 @@ class InfiniteAjaxScrollAsset extends AssetBundle
      */
     public function init()
     {
-        $this->sourcePath = '@vendor/webcreate/jquery-ias/src';
+        $this->sourcePath = '@vendor/optim1zer/yii2-scroll-pager/assets/js';
         $this->js = [
-            'callbacks.js',
-            'jquery-ias.js',
-            'extension/history.js',
-            'extension/noneleft.js',
-            'extension/paging.js',
-            'extension/spinner.js',
-            'extension/trigger.js'
+            'jquery-ias.min.js'
         ];
     }
 }

@@ -111,7 +111,7 @@ class ScrollPager extends Widget
      * @var string $triggerTemplate Allows you to override the trigger html template.
      */
     public $triggerTemplatePrev = '<div class="ias-trigger" style="text-align: center; cursor: pointer;"><a>{text}</a></div>';
-	
+
     /**
      * @var int $triggerOffset The number of pages which should load automatically.
      * After that the trigger is shown for every subsequent page.
@@ -232,6 +232,11 @@ class ScrollPager extends Widget
     public $pagination;
 
     /**
+     * @var string PJAX container id. For PJAX load support.
+     */
+    public $pjaxContainer;
+
+    /**
      * Initializes the pager.
      */
     public function init()
@@ -256,7 +261,7 @@ class ScrollPager extends Widget
         if ($this->triggerText === null) {
             $this->triggerText = Yii::t('optim1zer\y2sp', 'Load more items');
         }
-		
+
 		// Set default trigger prev text if not set
         if ($this->triggerTextPrev === null) {
             $this->triggerTextPrev = Yii::t('optim1zer\y2sp', 'Load previous items');
@@ -290,7 +295,7 @@ class ScrollPager extends Widget
         $initString = empty($this->overflowContainer)
             ? "var {$this->id}_ias = jQuery.ias({$pluginSettings});"
             : "var {$this->id}_ias = jQuery('{$this->overflowContainer}').ias({$pluginSettings});";
-        $this->view->registerJs($initString, View::POS_READY, "{$this->id}_ias_main");
+        $this->registerJs($initString, View::POS_READY, "{$this->id}_ias_main");
 
         // Register IAS extensions
         $this->registerExtensions([
@@ -333,6 +338,8 @@ class ScrollPager extends Widget
             ]
         ]);
 
+        $this->addPjaxSupport();
+
         // Register event handlers
         $this->registerEventHandlers([
             'scroll' => [],
@@ -368,6 +375,14 @@ class ScrollPager extends Widget
         InfiniteAjaxScrollAsset::register($this->view);
     }
 
+    protected function registerJs($js, $position, $key = null)
+    {
+        // ignore scripts when PJAX request; load them on the original page
+        if (!Yii::$app->request->getIsPjax()) {
+            $this->view->registerJs($js, $position, $key);
+        }
+    }
+
     /**
      * Register jQuery IAS extensions.
      *
@@ -397,13 +412,86 @@ class ScrollPager extends Widget
 
                 // Register extension
                 $options = Json::encode($options);
-                $this->view->registerJs(
+                $this->registerJs(
                     "{$this->id}_ias.extension(new {$name}({$options}));",
                     View::POS_READY,
                     "{$this->id}_ias_{$name}"
                 );
             }
         }
+    }
+
+    /**
+    * Adding PJAX support. Retrieving html only in pjaxContainer
+    * This is reducing size of response and DB queries
+    */
+    protected function addPjaxSupport()
+    {
+        if (!$this->pjaxContainer) {
+            return;
+        }
+
+        // overloading Load for pjax support
+        $this->registerJs($this->id.'_ias.on("ready", function() {
+            this.load = function(url, callback, delay) {
+                var self = this,
+                $itemContainer,
+                items = [],
+                timeStart = +new Date(),
+                timeDiff;
+
+                delay = delay || this.defaultDelay;
+
+                var loadEvent = {
+                    url: url
+                };
+
+                self.fire("load", [loadEvent]);
+
+                return $.ajax({
+                    url: loadEvent.url,
+                    data: null,
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("X-PJAX", "true");
+                        xhr.setRequestHeader("X-PJAX-Container", "#'.$this->pjaxContainer.'");
+                    },
+                    success: $.proxy(function(data) {
+                        $itemContainer = $(this.itemsContainerSelector, data).eq(0);
+                        if (0 === $itemContainer.length) {
+                            $itemContainer = $(data).filter(this.itemsContainerSelector).eq(0);
+                        }
+
+                        if ($itemContainer) {
+                            $itemContainer.find(this.itemSelector).each(function() {
+                                items.push(this);
+                            });
+                        }
+
+                        self.fire("loaded", [data, items]);
+
+                        if (callback) {
+                            timeDiff = +new Date() - timeStart;
+                            if (timeDiff < delay) {
+                                setTimeout(function() {
+                                    callback.call(self, data, items);
+                                    }, delay - timeDiff);
+                            } else {
+                                callback.call(self, data, items);
+                            }
+                        }
+                    }, self),
+                    dataType: "html"
+                });
+            };
+          });', View::POS_READY, "{$this->id}_ias_pjax_support"
+        );
+
+        // reinit plugin when content is edited by external Pjax calls
+        $this->registerJs('$(document).on("pjax:complete", function() {
+            '.$this->id.'_ias.reinitialize();
+          });', View::POS_READY, "{$this->id}_ias_pjax_complete"
+        );
+
     }
 
     /**
@@ -430,7 +518,7 @@ class ScrollPager extends Widget
                 }
 
                 // Register event
-                $this->view->registerJs(
+                $this->registerJs(
                     "jQuery.ias().on('{$name}', {$this->$eventName});",
                     View::POS_READY,
                     "{$this->id}_ias_{$name}"
