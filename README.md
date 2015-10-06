@@ -27,11 +27,11 @@ The preferred way to install this extension is through [Composer](http://getcomp
 
 Either run
 
-``` php composer.phar require kop/yii2-scroll-pager "dev-master" ```
+``` php composer.phar require optim1zer/yii2-scroll-pager "dev-master" ```
 
 or add
 
-``` "kop/yii2-scroll-pager": "dev-master"```
+``` "optim1zer/yii2-scroll-pager": "dev-master"```
 
 to the `require` section of your `composer.json` file.
 
@@ -46,7 +46,7 @@ echo ListView::widget([
      'dataProvider' => $dataProvider,
      'itemOptions' => ['class' => 'item'],
      'itemView' => '_item_view',
-     'pager' => ['class' => \kop\y2sp\ScrollPager::className()]
+     'pager' => ['class' => \optim1zer\y2sp\ScrollPager::className()]
 ]);
 ```
 

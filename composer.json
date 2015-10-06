@@ -1,13 +1,13 @@
 {
-    "name": "kop/yii2-scroll-pager",
+    "name": "optim1zer/yii2-scroll-pager",
     "description": "Infinite AJAX scrolling for Yii2 ListView widget",
-    "homepage": "http://kop.github.io/yii2-scroll-pager/",
+    "homepage": "http://optim1zer.github.io/yii2-scroll-pager/",
     "keywords": ["yii", "yii2", "scroll", "scrolling", "pager", "pagination"],
     "type": "yii2-extension",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/kop/yii2-scroll-pager/issues",
-        "source": "https://github.com/kop/yii2-scroll-pager"
+        "issues": "https://github.com/optim1zer/yii2-scroll-pager/issues",
+        "source": "https://github.com/optim1zer/yii2-scroll-pager"
     },
     "authors": [
         {
@@ -26,7 +26,7 @@
 	},
     "autoload": {
         "psr-4": {
-            "kop\\y2sp\\": ""
+            "optim1zer\\y2sp\\": ""
         }
     }
 }
