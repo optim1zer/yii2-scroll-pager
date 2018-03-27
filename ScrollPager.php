@@ -288,7 +288,7 @@ class ScrollPager extends Widget
             'container' => $this->container,
             'item' => $this->item,
             'pagination' => "{$this->container} .pagination",
-            'next' => "{$this->container} .pagination .next a",
+            'next' => '.next a',
             'delay' => $this->delay,
             'negativeMargin' => $this->negativeMargin
         ]);
